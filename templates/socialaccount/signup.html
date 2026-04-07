@@ -1,0 +1,162 @@
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Sign Up | Turf Match</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-deep: #0a1a0f;
+            --green-field: #0f2d1a;
+            --green-bright: #22c55e;
+            --green-glow: rgba(34,197,94,0.25);
+            --white: #f0faf2;
+            --muted: #6b9b7a;
+            --border: rgba(34, 197, 94, 0.18);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: var(--green-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+        }
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(15, 45, 26, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            animation: slideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        .brand-icon {
+            width: 44px; height: 44px;
+            background: var(--green-bright);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px var(--green-glow);
+        }
+        .brand-name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--white);
+            text-transform: uppercase;
+        }
+        .brand-name span { color: var(--green-bright); }
+        .card-eyebrow {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--green-bright);
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+        .card-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--white);
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        .card-title span { color: var(--green-bright); }
+        label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+        }
+        .form-group { margin-bottom: 1.2rem; }
+        input, select {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(15, 45, 26, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+            color: var(--white);
+            -webkit-appearance: none;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--green-bright);
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+        }
+        select option { background: #0f2d1a; }
+        .btn-register {
+            width: 100%;
+            padding: 0.95rem;
+            border: none;
+            border-radius: 10px;
+            background: var(--green-bright);
+            color: var(--green-deep);
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 0.5rem;
+        }
+        .btn-register:hover {
+            background: #4ade80;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(34,197,94,0.35);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="brand">
+            <div class="brand-icon">⚽</div>
+            <div class="brand-name">Turf<span>Match</span></div>
+        </div>
+
+        <p class="card-eyebrow">One last step</p>
+        <h2 class="card-title">Complete <span>Sign Up</span></h2>
+
+        <form method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username"
+                       value="{{ form.username.value|default:'' }}"
+                       placeholder="Choose a username" required>
+            </div>
+
+            <div class="form-group">
+                <label>I am a</label>
+                <select name="user_type">
+                    <option value="player">Player</option>
+                    <option value="owner">Turf Owner</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-register">Join TurfMatch →</button>
+        </form>
+    </div>
+</body>
+</html>

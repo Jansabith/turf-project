@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Slot – {{ timeslot.turf.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --lime: #aaff00;
+            --white: #f5f7f0;
+            --muted: #6b7e65;
+            --card-bg: #111c14;
+            --card-border: #1e3324;
+            --input-bg: #0d1610;
+            --bg: #0a1209;
+            --red: #ff4d4d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;        /* ← change from center to flex-start */
+    justify-content: center;
+    padding: 32px 16px 60px;        /* ← add bottom padding */
+    position: relative;
+    overflow-y: auto;               /* ← change overflow:hidden to overflow-y:auto */
+}
+
+        /* Ambient glow orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb-1 {
+            width: 500px; height: 500px;
+            top: -180px; left: -140px;
+            background: radial-gradient(circle, rgba(13,92,46,0.3) 0%, transparent 70%);
+        }
+
+        .orb-2 {
+            width: 380px; height: 380px;
+            bottom: -100px; right: -100px;
+            background: radial-gradient(circle, rgba(170,255,0,0.07) 0%, transparent 70%);
+        }
+
+        /* Grid texture */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.01) 60px, rgba(255,255,255,0.01) 61px),
+                repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.01) 60px, rgba(255,255,255,0.01) 61px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── WRAPPER ── */
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--lime); }
+        .back-link svg { width: 15px; height: 15px; }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        /* ── CARD HEADER ── */
+        .card-header {
+            padding: 32px 32px 26px;
+            background: linear-gradient(135deg, rgba(13,92,46,0.45) 0%, transparent 60%);
+            border-bottom: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 200px; height: 200px;
+            border: 32px solid rgba(170,255,0,0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--lime);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .eyebrow::before { content: ''; width: 20px; height: 2px; background: var(--lime); }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 40px;
+            letter-spacing: 0.03em;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-title span { color: var(--lime); }
+
+        /* ── SLOT INFO STRIP ── */
+        .slot-strip {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 22px 32px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .strip-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .strip-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .strip-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--white);
+        }
+
+        .strip-value.lime { color: var(--lime); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.04em; }
+
+        /* Players bar in strip */
+        .players-bar-wrap {
+            margin-top: 4px;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .players-bar-fill {
+            height: 100%;
+            background: var(--lime);
+            border-radius: 100px;
+            transition: width 0.8s ease;
+        }
+
+        /* ── COUNTDOWN ── */
+        .countdown-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 32px;
+            background: rgba(170,255,0,0.04);
+            border-bottom: 1px solid var(--card-border);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .countdown-strip svg { width: 13px; height: 13px; color: var(--lime); flex-shrink: 0; }
+
+        .countdown-time {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            color: var(--lime);
+            letter-spacing: 0.06em;
+        }
+
+        /* ── FORM BODY ── */
+        .card-body { padding: 28px 32px 32px; }
+
+        .form-group {
+            margin-bottom: 20px;
+            animation: fadeIn 0.4s ease both;
+        }
+
+        .form-group:nth-child(1){ animation-delay: .08s }
+        .form-group:nth-child(2){ animation-delay: .13s }
+        .form-group:nth-child(3){ animation-delay: .18s }
+        .form-group:nth-child(4){ animation-delay: .23s }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7e65' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: rgba(170,255,0,0.4);
+            box-shadow: 0 0 0 3px rgba(170,255,0,0.07);
+            background: #0f1d12;
+        }
+
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator,
+        .form-group input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.4); cursor: pointer;
+        }
+
+        .form-group ul.errorlist {
+            list-style: none;
+            margin-top: 7px;
+        }
+
+        .form-group ul.errorlist li {
+            font-size: 12px;
+            color: var(--red);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-group ul.errorlist li::before {
+            content: '!';
+            width: 16px; height: 16px;
+            background: rgba(255,77,77,0.15);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 4px 0 24px;
+        }
+
+        /* ── SUBMIT ── */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--lime);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(170,255,0,0.3);
+        }
+
+        .submit-btn:active { transform: translateY(0); box-shadow: none; }
+        .submit-btn svg { width: 16px; height: 16px; }
+
+        /* ── FOOTER NOTE ── */
+        .card-footer {
+            padding: 16px 32px;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .card-footer svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--lime); }
+
+     /* Replace your existing media query with this */
+@media (max-width: 520px) {
+    body {
+        align-items: flex-start;  /* ← stop centering vertically */
+        padding: 16px 12px 40px;  /* ← less top padding, more bottom */
+    }
+
+    .card-header, .card-body, .slot-strip, .countdown-strip, .card-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .card-header {
+        padding-top: 20px;
+        padding-bottom: 16px;
+    }
+
+
+
+
+    /* ── WHATSAPP NOTIFY BANNER ── */
+.wa-banner {
+    background: rgba(37,211,102,0.05);
+    border: 1px solid rgba(37,211,102,0.18);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.wa-banner-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #25d366;
+    margin-bottom: 6px;
+}
+
+.wa-banner-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+.wa-notify-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 11px;
+    background: #25d366;
+    color: #000;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.wa-notify-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37,211,102,0.25);
+}
+
+
+
+
+
+
+
+
+    .card-title { font-size: 28px; }
+    .slot-strip { grid-template-columns: 1fr; gap: 8px; padding-top: 14px; padding-bottom: 14px; }
+
+    .card-body { padding-top: 20px; padding-bottom: 20px; }
+
+    .form-group { margin-bottom: 14px; }  /* tighten form spacing */
+
+    .submit-btn { padding: 14px; font-size: 14px; }
+}
+    </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="bg-grid"></div>
+
+<div class="wrapper">
+
+    <a href="{% url 'slot_list' timeslot.turf.id %}" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to Slots
+    </a>
+
+    <div class="card">
+
+        <!-- Header -->
+        <div class="card-header">
+            <p class="eyebrow">Joining Now</p>
+            <h1 class="card-title">{{ timeslot.turf.name }}<span>.</span></h1>
+        </div>
+
+        <!-- Slot info strip -->
+        <div class="slot-strip">
+            <div class="strip-item">
+                <span class="strip-label">Date</span>
+                <span class="strip-value">{{ timeslot.date }}</span>
+            </div>
+            <div class="strip-item">
+                <span class="strip-label">Time</span>
+                <span class="strip-value">{{ timeslot.start_time }} – {{ timeslot.end_time }}</span>
+            </div>
+            <div class="strip-item">
+                <span class="strip-label">Players</span>
+                <span class="strip-value lime">{{ timeslot.current_players }} / {{ timeslot.max_player }}</span>
+                <div class="players-bar-wrap">
+                    <div class="players-bar-fill" id="playersBar"></div>
+                </div>
+            </div>
+            <!-- <div class="strip-item">
+                <span class="strip-label">Spots Left</span>
+                <span class="strip-value lime" id="spotsLeft">–</span>
+            </div> -->
+        </div>
+
+        <!-- Live countdown -->
+        <div class="countdown-strip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Match starts in</span>
+            <span class="countdown-time" id="countdown">calculating...</span>
+        </div>
+
+        <!-- Form -->
+        <div class="card-body">
+
+
+                            <!-- WhatsApp Notify Banner -->
+                    <div class="wa-banner">
+                        <div class="wa-banner-top">
+                            <svg viewBox="0 0 24 24" fill="#25d366" style="width:16px;height:16px;flex-shrink:0">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            <span>Get notified when the slot is full</span>
+                        </div>
+                        <p class="wa-banner-sub">Tap below to message us on WhatsApp — we'll ping you when a spot becomes full</p>
+                        <a href="http://wa.me/+14155238886?text=join%20behind-suit" target="_blank" class="wa-notify-btn">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;flex-shrink:0">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            Notify me on WhatsApp
+                        </a>
+                    </div>
+                    
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div style="background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--red);">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}{{ field.errors }}{% endif %}
+                </div>
+                {% endfor %}
+
+
+
+                <div class="divider"></div>
+
+                <button type="submit" class="submit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Confirm & Join
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer note -->
+        <div class="card-footer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Your spot is only confirmed once you submit this form.
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ── Players fill bar ──
+    const current = parseInt("{{ timeslot.current_players }}") || 0;
+    const max     = parseInt("{{ timeslot.max_players }}")     || 1;
+    const pct     = Math.min(100, Math.round((current / max) * 100));
+    const bar     = document.getElementById('playersBar');
+    const spots   = document.getElementById('spotsLeft');
+
+    if (bar)   bar.style.width = pct + '%';
+    if (spots) spots.textContent = Math.max(0, max - current);
+
+    // ── Countdown to match ──
+    function buildMatchDate() {
+        try {
+            const dateStr = "{{ timeslot.date|date:'Y-m-d' }}";
+            const timeStr = "{{ timeslot.start_time|time:'H:i' }}";
+            return new Date(dateStr + 'T' + timeStr + ':00');
+        } catch(e) { return null; }
+    }
+
+    function updateCountdown() {
+        const el = document.getElementById('countdown');
+        if (!el) return;
+        const match = buildMatchDate();
+        if (!match || isNaN(match)) { el.textContent = 'soon'; return; }
+
+        const diff = match - Date.now();
+
+        if (diff <= 0) {
+            el.textContent = 'KICK OFF!';
+            el.style.color = '#ff4d4d';
+            return;
+        }
+
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000)  / 60000);
+        const s = Math.floor((diff % 60000)    / 1000);
+
+        if (d > 0)      el.textContent = `${d}d ${h}h ${m}m`;
+        else if (h > 0) el.textContent = `${h}h ${m}m ${s}s`;
+        else            el.textContent = `${m}m ${s}s`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
+
+</body>
+</html>

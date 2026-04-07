@@ -1,0 +1,1301 @@
+<!-- {% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Turf Match</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:url("{% static 'turf.jpg' %}") no-repeat center center fixed;
+background-size:cover;
+}
+
+/* overlay */
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.65);
+z-index:-1;
+}
+
+/* NAVBAR */
+
+header{
+background:rgba(0,0,0,0.85);
+padding:15px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+color:white;
+}
+
+header h2{
+font-weight:600;
+}
+
+/* SEARCH */
+
+.search-form{
+display:flex;
+gap:8px;
+}
+
+.search-form input{
+padding:8px 12px;
+border:none;
+border-radius:6px;
+width:200px;
+}
+
+.search-form button{
+padding:8px 14px;
+border:none;
+border-radius:6px;
+background:#ffd369;
+cursor:pointer;
+}
+
+.search-form button:hover{
+background:#ffc107;
+}
+
+/* NAV LINKS */
+
+.nav-links{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+.nav-links a{
+color:white;
+text-decoration:none;
+font-size:14px;
+}
+
+.logout-btn{
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+/* GRID */
+
+.container{
+max-width:1200px;
+margin:40px auto;
+padding:0 20px;
+
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:25px;
+}
+
+/* CREATE BUTTON */
+
+.create-btn{
+grid-column:1/-1;
+display:inline-block;
+padding:10px 18px;
+background:#1d2671;
+color:white;
+border-radius:25px;
+text-decoration:none;
+width:max-content;
+}
+
+.create-btn:hover{
+background:#c33764;
+}
+
+/* CARD */
+
+.turf-card{
+background:white;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 8px 18px rgba(0,0,0,0.25);
+transition:0.3s;
+display:flex;
+flex-direction:column;
+}
+
+.turf-card:hover{
+transform:translateY(-5px);
+}
+
+/* IMAGE */
+
+.turf-image{
+height:180px;
+overflow:hidden;
+}
+
+.turf-image img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+/* CONTENT */
+
+.turf-content{
+padding:15px;
+}
+
+.turf-content h3{
+color:#1d2671;
+margin-bottom:5px;
+}
+
+.turf-content p{
+font-size:14px;
+margin-bottom:4px;
+}
+
+/* SLOT */
+
+.slot-card{
+background:#f5f5f5;
+padding:10px;
+border-radius:8px;
+margin-top:10px;
+font-size:13px;
+}
+
+/* BUTTONS */
+
+.buttons{
+margin-top:6px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.join-btn{
+padding:6px 12px;
+background:#1d2671;
+color:white;
+text-decoration:none;
+border-radius:20px;
+font-size:13px;
+}
+
+.join-btn:hover{
+background:#c33764;
+}
+
+.view-btn{
+padding:6px 12px;
+background:#3a4aa3;
+color:white;
+text-decoration:none;
+border-radius:20px;
+font-size:13px;
+}
+
+.view-btn:hover{
+background:#2c3b85;
+}
+
+.full{
+color:red;
+font-weight:600;
+}
+
+.delete-btn{
+display:inline-block;
+padding:6px 12px;
+background:#e74c3c;
+color:white;
+border-radius:20px;
+text-decoration:none;
+font-size:13px;
+margin-left:6px;
+}
+
+.delete-btn:hover{
+background:#c0392b;
+}
+
+.progress{
+width:100%;
+height:8px;
+background:#e6e6e6;
+border-radius:10px;
+margin-top:6px;
+overflow:hidden;
+}
+
+.progress-bar{
+height:100%;
+background:#1d2671;
+border-radius:10px;
+transition:0.3s;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+header{
+flex-direction:column;
+align-items:flex-start;
+gap:10px;
+}
+
+.search-form{
+width:100%;
+}
+
+.search-form input{
+width:100%;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h2>⚽ Turf Match</h2>
+
+<form method="GET" class="search-form">
+
+<input
+type="text"
+name="q"
+placeholder="Search location"
+value="{{ query|default:'' }}"
+>
+
+<button type="submit">Search</button>
+
+</form>
+
+<div class="nav-links">
+
+{% if user.is_authenticated %}
+
+Hi {{ user.username }}
+
+<form action="{% url 'logout' %}" method="POST">
+{% csrf_token %}
+<button type="submit" class="logout-btn">Logout</button>
+</form>
+
+{% else %}
+
+<a href="{% url 'login' %}">Login</a>
+<a href="{% url 'register' %}">Register</a>
+
+{% endif %}
+
+</div>
+
+</header>
+
+
+<div class="container">
+
+{% if user.is_authenticated and user.user_type == "owner" %}
+<a href="{% url 'create_turf' %}" class="create-btn">
++ Create Turf
+</a>
+{% endif %}
+
+
+{% for turf in turfs %}
+
+<div class="turf-card">
+
+<a href="{% url 'turf_detail' turf.id %}">
+
+<div class="turf-image">
+
+{% if turf.image %}
+<img src="{{ turf.image.url }}">
+{% else %}
+<img src="{% static 'turf.jpg' %}">
+{% endif %}
+
+</div>
+
+</a>
+
+<div class="turf-content">
+<a href="{% url 'turf_detail' turf.id %}" style="text-decoration: none; color: inherit;">
+    <h3>{{ turf.name }}</h3>
+<p><strong>Location:</strong> {{ turf.location }}</p>
+<p><strong>Price:</strong> ₹ {{ turf.price_per_hour }} / hour</p>
+</a>
+
+
+{% if user.is_authenticated and user == turf.owner %}
+
+<a href="{% url 'create_slot' turf.id %}" class="join-btn">
++ Create Slot
+</a>
+
+<a href="{% url 'delete_turf' turf.id %}" 
+class="delete-btn"
+onclick="return confirm('Delete this turf?')">
+Delete Turf
+</a>
+
+{% endif %}
+
+{% for slot in turf.slots.all %}
+
+<div class="slot-card">
+
+<p>{{ slot.date }} | {{ slot.start_time }} - {{ slot.end_time }}</p>
+<p class="players-text">
+Players: {{ slot.current_players }} / {{ slot.max_player }}
+</p>
+
+<div class="progress">
+
+<div class="progress-bar"
+style="width:{% widthratio slot.current_players slot.max_player 100 %}%">
+</div>
+
+</div>
+
+<div class="buttons">
+
+<a href="{% url 'view_players' slot.id %}" class="view-btn">
+View Players
+</a>
+
+{% if slot.is_full %}
+
+<span class="full">FULL</span>
+
+{% if slot.is_full %}
+
+<a href="{% url 'view_teams' slot.id %}" class="join-btn">
+View Teams
+</a>
+
+{% endif %}
+
+
+
+
+
+
+{% else %}
+
+{% if user.is_authenticated %}
+
+{% if user.user_type == "player" %}
+{% if slot.id in joined_slots %}
+
+<span class="full">Already Joined</span>
+
+{% else %}
+
+<a href="{% url 'join_slot' slot.id %}" class="join-btn">
+Join
+</a>
+
+
+{% endif %}
+{% endif %}
+
+{% else %}
+
+<a href="{% url 'login' %}" class="join-btn">
+Login to Join
+</a>
+
+{% endif %}
+
+{% endif %}
+
+
+{% if user == turf.owner %}
+
+<a href="{% url 'delete_slot' slot.id %}" 
+class="delete-btn"
+onclick="return confirm('Delete this slot?')">
+Delete Slot
+</a>
+
+{% endif %}
+
+</div>
+
+</div>
+
+{% empty %}
+
+<p>No slots available</p>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+{% empty %}
+
+<p style="color:white;">No turfs available.</p>
+
+{% endfor %}
+
+</div>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+<!-- ------------------------------------------------------------------- -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Turf Match</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+:root {
+  --green: #00e676;
+  --green-dim: #00c853;
+  --dark: #080e14;
+  --dark2: #0d1821;
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --text: #e8f0f7;
+  --muted: #7a93aa;
+  --accent: #00e676;
+  --red: #ff4757;
+  --gold: #ffd369;
+  --radius: 16px;
+}
+
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── ANIMATED PITCH BACKGROUND ── */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,230,118,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(29,38,113,0.4) 0%, transparent 60%),
+    var(--dark);
+  pointer-events: none;
+}
+
+.bg-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 48px,
+      rgba(0,230,118,0.025) 48px,
+      rgba(0,230,118,0.025) 49px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      rgba(0,230,118,0.025) 48px,
+      rgba(0,230,118,0.025) 49px
+    );
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,14,20,0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(0,230,118,0.12);
+  padding: 0 40px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--green);
+  text-shadow: 0 0 24px rgba(0,230,118,0.5);
+  white-space: nowrap;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--green);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 18px;
+  animation: pulse-ball 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse-ball {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,230,118,0.5); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 10px rgba(0,230,118,0); transform: scale(1.05); }
+}
+
+/* search */
+.search-form {
+  display: flex; gap: 0;
+  flex: 1; max-width: 360px;
+}
+
+.search-form input {
+  flex: 1;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--card-border);
+  border-right: none;
+  border-radius: var(--radius) 0 0 var(--radius);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.search-form input:focus {
+  border-color: rgba(0,230,118,0.4);
+}
+
+.search-form input::placeholder { color: var(--muted); }
+
+.search-form button {
+  padding: 10px 18px;
+  background: var(--green);
+  border: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.search-form button:hover { background: var(--green-dim); transform: scale(1.04); }
+
+/* nav */
+.nav-links {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 14px; color: var(--muted);
+  white-space: nowrap;
+}
+
+.nav-links a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 7px 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 50px;
+  transition: 0.25s;
+}
+
+.nav-links a:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  cursor: pointer;
+  padding: 7px 16px;
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  transition: 0.25s;
+}
+
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+.greeting {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted);
+}
+
+.greeting::before {
+  content: '';
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green);
+}
+
+/* ── HERO STRIP ── */
+.hero-strip {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 60px 20px 30px;
+  animation: fadeUp 0.8s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-strip h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 10vw, 110px);
+  line-height: 0.9;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #ffffff 30%, var(--green) 70%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-strip p {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+/* ── CONTAINER ── */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: 20px auto 60px;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 28px;
+}
+
+/* ── CREATE BTN ── */
+.create-btn {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--green), #00bcd4);
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  border-radius: 50px;
+  text-decoration: none;
+  width: max-content;
+  transition: 0.25s;
+  box-shadow: 0 4px 20px rgba(0,230,118,0.35);
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,230,118,0.5);
+}
+
+/* ── CARD ── */
+.turf-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s;
+  display: flex;
+  flex-direction: column;
+  animation: cardIn 0.6s ease both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.turf-card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,230,118,0.15);
+}
+
+/* IMAGE */
+.turf-image {
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+
+.turf-image img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.turf-card:hover .turf-image img { transform: scale(1.06); }
+
+.turf-image::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(transparent, rgba(8,14,20,0.9));
+}
+
+/* CONTENT */
+.turf-content {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.turf-content a { text-decoration: none; color: inherit; }
+
+.turf-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.turf-content p {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+}
+
+.turf-content p strong { color: var(--text); font-weight: 500; }
+
+.price-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: rgba(0,230,118,0.12);
+  border: 1px solid rgba(0,230,118,0.2);
+  border-radius: 50px;
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: 4px;
+  width: max-content;
+}
+
+/* OWNER ACTIONS */
+.owner-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+
+/* DIVIDER */
+.slots-divider {
+  margin: 12px 0 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+  display: flex; align-items: center; gap: 10px;
+}
+
+.slots-divider::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: var(--card-border);
+}
+
+/* SLOT */
+.slot-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  transition: border-color 0.25s;
+}
+
+.slot-card:hover { border-color: rgba(0,230,118,0.2); }
+
+.slot-time {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.slot-time-icon {
+  width: 28px; height: 28px;
+  background: rgba(0,230,118,0.1);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 14px;
+}
+
+.players-text {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.players-count { color: var(--green); font-weight: 600; }
+
+/* PROGRESS */
+.progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), #00bcd4);
+  border-radius: 10px;
+  transition: width 0.6s ease;
+  box-shadow: 0 0 8px rgba(0,230,118,0.5);
+}
+
+/* BUTTONS */
+.buttons {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+
+.join-btn {
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #1d2671, #4a54d1);
+  color: white;
+  text-decoration: none;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: 0.2s;
+  border: none; cursor: pointer;
+}
+
+.join-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(29,38,113,0.6);
+  filter: brightness(1.15);
+}
+
+.view-btn {
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--card-border);
+  transition: 0.2s;
+}
+
+.view-btn:hover {
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.delete-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(255,71,87,0.1);
+  color: var(--red);
+  border-radius: 50px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(255,71,87,0.25);
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  background: rgba(255,71,87,0.2);
+  border-color: var(--red);
+}
+
+.full {
+  color: var(--red);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: rgba(255,71,87,0.1);
+  border: 1px solid rgba(255,71,87,0.25);
+  border-radius: 50px;
+}
+
+.already-joined {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  background: rgba(255,211,105,0.08);
+  border: 1px solid rgba(255,211,105,0.2);
+  border-radius: 50px;
+}
+
+/* EMPTY */
+.no-turfs {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+
+.no-turfs-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.4;
+}
+
+.no-turfs p { font-size: 18px; }
+
+/* ── MOBILE ── */
+@media (max-width: 700px) {
+  header {
+    height: auto;
+    padding: 14px 20px;
+    gap: 12px;
+  }
+  .search-form { max-width: 100%; width: 100%; }
+  .hero-strip { padding: 40px 16px 20px; }
+  .container { padding: 0 16px; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="bg-layer"></div>
+
+<!-- ══ HEADER ══ -->
+<header>
+
+ <a href=" {% url 'first_home' %}" style="text-decoration: none;"> <div class="logo">
+    <div class="logo-icon">⚽</div>
+    TURF MATCH
+  </div></a> 
+ 
+ <!-- <div class="logo">
+    <div class="logo-icon">⚽</div>
+    TURF MATCH
+  </div> -->
+
+  <form method="GET" class="search-form">
+    <input
+      type="text"
+      name="q"
+      placeholder="Search by location…"
+      value="{{ query|default:'' }}"
+    >
+    <button type="submit">Go</button>
+  </form>
+
+  <div class="nav-links">
+    {% if user.is_authenticated %}
+      <span class="greeting">Hi, {{ user.username }}</span>
+      <form action="{% url 'logout' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    {% else %}
+      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'register' %}">Register</a>
+    {% endif %}
+  </div>
+
+</header>
+
+<!-- ══ HERO ══ -->
+<div class="hero-strip">
+  <h1>FIND<br>YOUR PITCH</h1>
+  <p>Book a slot · Join a team · Play the game</p>
+</div>
+
+<!-- ══ GRID ══ -->
+<div class="container">
+
+  {% if user.is_authenticated and user.user_type == "owner" %}
+    <a href="{% url 'create_turf' %}" class="create-btn">
+      ＋ &nbsp;Create New Turf
+    </a>
+  {% endif %}
+
+  {% for turf in turfs %}
+
+  <div class="turf-card" style="animation-delay: {{ forloop.counter0 }}00ms">
+
+    <!-- Image -->
+    <a href="{% url 'turf_detail' turf.id %}">
+      <div class="turf-image">
+        {% if turf.image %}
+          <img src="{{ turf.image.url }}" alt="{{ turf.name }}">
+        {% else %}
+          <img src="{% static 'turf.jpg' %}" alt="{{ turf.name }}">
+        {% endif %}
+      </div>
+    </a>
+
+    <div class="turf-content">
+
+      <!-- Info -->
+      <a href="{% url 'turf_detail' turf.id %}">
+        <h3>{{ turf.name }}</h3>
+      </a>
+      <p>📍 <strong>{{ turf.location }}</strong></p>
+      <div class="price-tag">₹ {{ turf.price_per_hour }} / hr</div>
+
+      <!-- Owner controls -->
+      {% if user.is_authenticated and user == turf.owner %}
+        <div class="owner-actions">
+          <a href="{% url 'create_slot' turf.id %}" class="join-btn">＋ Slot</a>
+          <a href="{% url 'delete_turf' turf.id %}" class="delete-btn"
+             onclick="return confirm('Delete this turf?')">🗑 Turf</a>
+
+          <a href="{% url 'edit_turf' turf.id %}" class="view-btn">
+             ✏ Edit
+                </a>
+        </div>
+      {% endif %}
+
+      <!-- Slots -->
+      <div class="slots-divider">Slots</div>
+
+      {% for slot in turf.slots.all %}
+
+      <div class="slot-card">
+
+        <div class="slot-time">
+          <div class="slot-time-icon">🕐</div>
+          {{ slot.date }} &nbsp;·&nbsp; {{ slot.start_time }} – {{ slot.end_time }}
+        </div>
+
+        <div class="players-text">
+          <span>Players</span>
+          <span class="players-count">{{ slot.current_players }} / {{ slot.max_player }}</span>
+        </div>
+
+        <div class="progress">
+          <div class="progress-bar"
+               style="width:{% widthratio slot.current_players slot.max_player 100 %}%">
+          </div>
+        </div>
+
+        <div class="buttons">
+
+          <a href="{% url 'view_players' slot.id %}" class="view-btn">👥 Players</a>
+
+          {% if slot.is_full %}
+
+            <span class="full">⛔ FULL</span>
+            <a href="{% url 'view_teams' slot.id %}" class="join-btn">🏆 Teams</a>
+
+          {% else %}
+
+            {% if user.is_authenticated %}
+              {% if user.user_type == "player" %}
+
+                {% if slot.id in joined_slots %}
+
+                      <span class="already-joined">✓ Joined</span>
+
+                      <a href="{% url 'exit_slot' slot.id %}" class="delete-btn">
+                      Exit Match
+                      </a>
+
+                      {% else %}
+
+                      <a href="{% url 'join_slot' slot.id %}" class="join-btn">⚡ Join</a>
+
+                      {% endif %}
+
+
+                <!-- {% if slot.id in joined_slots %}
+                  <span class="already-joined">✓ Joined</span>
+
+                  
+
+
+
+
+                {% else %}
+                  <a href="{% url 'join_slot' slot.id %}" class="join-btn">⚡ Join</a>
+                {% endif %} -->
+              {% endif %}
+            {% else %}
+              <a href="{% url 'login' %}" class="join-btn">Login to Join</a>
+            {% endif %}
+
+          {% endif %}
+
+          {% if user == turf.owner %}
+            <a href="{% url 'delete_slot' slot.id %}" class="delete-btn"
+               onclick="return confirm('Delete this slot?')">🗑</a>
+          {% endif %}
+
+        </div>
+
+      </div>
+
+      {% empty %}
+        <p style="color: var(--muted); font-size:13px; padding: 8px 0;">No slots yet</p>
+      {% endfor %}
+
+    </div>
+  </div>
+
+  {% empty %}
+
+  <div class="no-turfs">
+    <div class="no-turfs-icon">🏟️</div>
+    <p>No turfs found. Try a different location.</p>
+  </div>
+
+  {% endfor %}
+
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

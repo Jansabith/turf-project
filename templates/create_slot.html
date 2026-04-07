@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Slot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --grass: #0d5c2e;
+            --lime: #aaff00;
+            --white: #f5f7f0;
+            --muted: #6b7e65;
+            --card-bg: #111c14;
+            --card-border: #1e3324;
+            --input-bg: #0d1610;
+            --bg: #0a1209;
+            --error: #ff5a5a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--white);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient background orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -120px;
+            left: -120px;
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(13,92,46,0.35) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -80px;
+            right: -80px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(170,255,0,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Field grid texture */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.012) 60px, rgba(255,255,255,0.012) 61px),
+                repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.012) 60px, rgba(255,255,255,0.012) 61px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--lime); }
+        .back-link svg { width: 15px; height: 15px; }
+
+        /* Card */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 36px 36px 28px;
+            background: linear-gradient(135deg, rgba(13,92,46,0.4) 0%, transparent 60%);
+            border-bottom: 1px solid var(--card-border);
+            position: relative;
+        }
+
+        /* Decorative circle */
+        .card-header::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            border: 28px solid rgba(170,255,0,0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--lime);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .eyebrow::before {
+            content: '';
+            width: 20px;
+            height: 2px;
+            background: var(--lime);
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 38px;
+            letter-spacing: 0.03em;
+            line-height: 1;
+            color: var(--white);
+        }
+
+        .card-title span { color: var(--lime); }
+
+        /* Form body */
+        .card-body {
+            padding: 32px 36px 36px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+            animation: fadeIn 0.4s ease both;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.08s; }
+        .form-group:nth-child(2) { animation-delay: 0.13s; }
+        .form-group:nth-child(3) { animation-delay: 0.18s; }
+        .form-group:nth-child(4) { animation-delay: 0.23s; }
+        .form-group:nth-child(5) { animation-delay: 0.28s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        /* All Django-rendered inputs & selects */
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group input[type="time"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: 13px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        /* Select arrow */
+        .form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7e65' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: rgba(170,255,0,0.4);
+            box-shadow: 0 0 0 3px rgba(170,255,0,0.07);
+            background: #0f1d12;
+        }
+
+        .form-group input:hover,
+        .form-group select:hover {
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        /* Date/time color fix for webkit */
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator,
+        .form-group input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.4);
+            cursor: pointer;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* Django field errors */
+        .form-group ul.errorlist {
+            list-style: none;
+            margin-top: 7px;
+        }
+
+        .form-group ul.errorlist li {
+            font-size: 12px;
+            color: var(--error);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-group ul.errorlist li::before {
+            content: '!';
+            width: 16px;
+            height: 16px;
+            background: rgba(255,90,90,0.15);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Non-field errors */
+        .non-field-errors {
+            background: rgba(255,90,90,0.08);
+            border: 1px solid rgba(255,90,90,0.2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--error);
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 8px 0 28px;
+        }
+
+        /* Submit */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--lime);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+            margin-top: 4px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(170,255,0,0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .submit-btn svg { width: 16px; height: 16px; }
+
+        @media (max-width: 520px) {
+            .card-header, .card-body { padding-left: 24px; padding-right: 24px; }
+            .card-title { font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="wrapper">
+
+    <a href="{% url 'slot_list' turf.id %}" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to Slots
+    </a>
+
+    <div class="card">
+        <div class="card-header">
+            <p class="eyebrow">New Slot</p>
+            <h1 class="card-title">{{ turf.name }}<span>.</span></h1>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="non-field-errors">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            {{ field.errors }}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="divider"></div>
+
+                <button type="submit" class="submit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Create Slot
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

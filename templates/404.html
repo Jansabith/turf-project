@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 — Lost in the Void</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #06060e;
+      --surface: #0d0d1e;
+      --accent: #6c47ff;
+      --accent2: #ff4785;
+      --glow: rgba(108, 71, 255, 0.35);
+      --text: #e8e6ff;
+      --muted: #6b6899;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Star field */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--dur, 3s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      opacity: 0;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: var(--opacity, 0.8); transform: scale(1); }
+    }
+
+    /* Nebula blobs */
+    .nebula {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .nebula-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(108,71,255,0.18) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .nebula-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,71,133,0.14) 0%, transparent 70%);
+      bottom: -80px; right: -80px;
+      animation: drift 22s ease-in-out infinite alternate-reverse;
+    }
+    .nebula-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(71,200,255,0.1) 0%, transparent 70%);
+      top: 50%; left: 55%;
+      animation: drift 15s ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.1); }
+    }
+
+    /* Main content */
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    /* Glitch 404 */
+    .four-o-four {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(140px, 22vw, 240px);
+      line-height: 0.9;
+      letter-spacing: -4px;
+      position: relative;
+      display: inline-block;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 45%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: float 6s ease-in-out infinite;
+      filter: drop-shadow(0 0 40px var(--glow));
+    }
+
+    .four-o-four::before,
+    .four-o-four::after {
+      content: '404';
+      position: absolute;
+      inset: 0;
+      font-family: 'Bebas Neue', sans-serif;
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .four-o-four::before {
+      background: linear-gradient(135deg, var(--accent2), transparent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glitch1 4s infinite;
+      clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
+    }
+    .four-o-four::after {
+      background: linear-gradient(135deg, var(--accent), transparent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glitch2 4s infinite;
+      clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%);
+    }
+
+    @keyframes glitch1 {
+      0%, 90%, 100% { transform: translate(0); opacity: 0; }
+      91% { transform: translate(-4px, 2px); opacity: 0.7; }
+      93% { transform: translate(4px, -2px); opacity: 0.7; }
+      95% { transform: translate(-2px, 0); opacity: 0.7; }
+      97% { transform: translate(0); opacity: 0; }
+    }
+    @keyframes glitch2 {
+      0%, 85%, 100% { transform: translate(0); opacity: 0; }
+      86% { transform: translate(4px, -2px); opacity: 0.6; }
+      88% { transform: translate(-4px, 2px); opacity: 0.6; }
+      90% { transform: translate(2px, 0); opacity: 0.6; }
+      92% { transform: translate(0); opacity: 0; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* Orbit ring */
+    .orbit-wrap {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+    }
+    .orbit {
+      position: absolute;
+      width: 110%;
+      height: 30px;
+      top: 50%;
+      left: -5%;
+      transform: translateY(-50%);
+      border: 1.5px solid rgba(108, 71, 255, 0.3);
+      border-radius: 50%;
+      animation: orbit-spin 8s linear infinite;
+    }
+    .orbit::after {
+      content: '';
+      position: absolute;
+      width: 8px; height: 8px;
+      background: var(--accent2);
+      border-radius: 50%;
+      top: -4px; left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 12px var(--accent2);
+    }
+    @keyframes orbit-spin {
+      from { transform: translateY(-50%) rotateX(75deg) rotate(0deg); }
+      to   { transform: translateY(-50%) rotateX(75deg) rotate(360deg); }
+    }
+
+    /* Text */
+    .tagline {
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      margin-top: 0.25rem;
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s ease forwards;
+    }
+    .sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.65s ease forwards;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Divider */
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      margin: 1.2rem auto 1.8rem;
+      border-radius: 2px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.5s ease forwards;
+    }
+
+    /* Buttons */
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.85s ease forwards;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.8rem;
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s;
+      border: none;
+      letter-spacing: 0.03em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #9b6dff);
+      color: white;
+      box-shadow: 0 4px 24px rgba(108, 71, 255, 0.4);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 36px rgba(108, 71, 255, 0.6);
+    }
+    .btn-ghost {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+    }
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.09);
+      transform: translateY(-3px);
+      border-color: rgba(108,71,255,0.5);
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(255, 71, 133, 0.1);
+      border: 1px solid rgba(255,71,133,0.25);
+      color: #ff6fa0;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.1s ease forwards;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      background: var(--accent2);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,71,133,0.6); }
+      50% { box-shadow: 0 0 0 5px rgba(255,71,133,0); }
+    }
+
+    /* Noise grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Stars -->
+  <div class="stars" id="stars"></div>
+
+  <!-- Nebula -->
+  <div class="nebula nebula-1"></div>
+  <div class="nebula nebula-2"></div>
+  <div class="nebula nebula-3"></div>
+
+  <div class="container">
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      Page not found
+    </div>
+
+    <div class="orbit-wrap">
+      <div class="orbit"></div>
+      <div class="four-o-four">404</div>
+    </div>
+
+    <p class="tagline">You've drifted into the void.</p>
+    <div class="divider"></div>
+    <p class="sub">The page you're looking for has been swallowed by a black hole, moved to another dimension, or simply never existed.</p>
+
+    <div class="actions">
+      <a href="/home/" class="btn btn-primary">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+        Take me home
+      </a>
+      <a href="javascript:history.back()" class="btn btn-ghost">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Go back
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Generate starfield
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 160; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 2.5 + 0.5;
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const dur = (Math.random() * 4 + 2).toFixed(1);
+      const delay = (Math.random() * 6).toFixed(1);
+      const opacity = (Math.random() * 0.5 + 0.3).toFixed(2);
+      star.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        left: ${x}%; top: ${y}%;
+        --dur: ${dur}s;
+        --delay: ${delay}s;
+        --opacity: ${opacity};
+      `;
+      starsEl.appendChild(star);
+    }
+  </script>
+</body>
+</html>

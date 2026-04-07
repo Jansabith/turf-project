@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Create Turf — Turf Match</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<style>
+
+:root {
+  --g: #00e676;
+  --g2: #00c853;
+  --dark: #060b10;
+  --dark2: #0c1520;
+  --dark3: #111e2b;
+  --card: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --text: #e6eff8;
+  --muted: #6b8599;
+  --red: #ff4757;
+  --r: 16px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BG ── */
+.bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,230,118,0.1) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 90% 90%, rgba(0,60,255,0.07) 0%, transparent 55%),
+    var(--dark);
+}
+.bg::before {
+  content:'';
+  position:absolute; inset:0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 55px, rgba(0,230,118,0.018) 55px, rgba(0,230,118,0.018) 56px),
+    repeating-linear-gradient(90deg, transparent, transparent 55px, rgba(0,230,118,0.018) 55px, rgba(0,230,118,0.018) 56px);
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,11,16,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,230,118,0.1);
+  padding: 0 40px; height: 68px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px; letter-spacing: 3px; color: var(--g);
+  text-decoration: none;
+  text-shadow: 0 0 24px rgba(0,230,118,0.4);
+}
+
+.logo-ball {
+  width: 32px; height: 32px;
+  background: var(--g); border-radius: 50%;
+  display: grid; place-items: center; font-size: 16px;
+  animation: pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100%{ box-shadow:0 0 0 0 rgba(0,230,118,.5); transform:scale(1); }
+  50%    { box-shadow:0 0 0 10px rgba(0,230,118,0); transform:scale(1.06); }
+}
+
+.back-link {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted); text-decoration: none;
+  font-size: 13px; font-weight: 500;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  transition: .25s;
+}
+.back-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+/* ── PAGE WRAPPER ── */
+.page {
+  position: relative; z-index: 1;
+  max-width: 780px; margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── PAGE TITLE ── */
+.page-title {
+  margin-bottom: 36px;
+  animation: fadeUp .7s ease both;
+}
+
+.page-title .eyebrow {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--g); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.page-title .eyebrow::before {
+  content:'';
+  width: 24px; height: 2px;
+  background: var(--g); border-radius: 2px;
+}
+
+.page-title h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 8vw, 72px);
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #fff 30%, var(--g) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.page-title p {
+  margin-top: 10px;
+  color: var(--muted); font-size: 14px; font-weight: 300;
+  letter-spacing: 0.3px;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(24px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── FORM CARD ── */
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: fadeUp .7s ease .1s both;
+}
+
+/* ── SECTION BLOCK ── */
+.form-section {
+  padding: 32px 36px;
+  border-bottom: 1px solid var(--border);
+}
+.form-section:last-child { border-bottom: none; }
+
+.section-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 24px;
+}
+
+.section-icon {
+  width: 36px; height: 36px;
+  background: rgba(0,230,118,0.1);
+  border: 1px solid rgba(0,230,118,0.2);
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 17px; flex-shrink: 0;
+}
+
+.section-head h2 {
+  font-size: 15px; font-weight: 600;
+  color: var(--text);
+}
+
+.section-head p {
+  font-size: 12px; color: var(--muted); margin-top: 1px;
+}
+
+/* ── FIELD GRID ── */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field-grid .full { grid-column: 1 / -1; }
+
+.field {
+  display: flex; flex-direction: column; gap: 7px;
+}
+
+.field label {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* override Django widget inputs */
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="file"],
+.field select,
+.field textarea,
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .25s, background .25s, box-shadow .25s;
+  -webkit-appearance: none;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+.field input:focus,
+.field select:focus {
+  border-color: rgba(0,230,118,0.45);
+  background: rgba(0,230,118,0.04);
+  box-shadow: 0 0 0 3px rgba(0,230,118,0.08);
+}
+
+input::placeholder { color: var(--muted); }
+
+/* file input */
+.file-wrapper {
+  position: relative;
+}
+
+.file-label {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: .25s;
+  font-size: 14px; color: var(--muted);
+}
+
+.file-label:hover {
+  border-color: rgba(0,230,118,0.35);
+  color: var(--g);
+  background: rgba(0,230,118,0.04);
+}
+
+.file-label .file-icon {
+  width: 36px; height: 36px;
+  background: rgba(0,230,118,0.1);
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 18px; flex-shrink: 0;
+}
+
+.file-label span { line-height: 1.4; }
+.file-label small { display:block; font-size:11px; opacity:.6; }
+
+input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  padding: 0;
+}
+
+/* hidden lat/lng */
+input[name="latitude"],
+input[name="longitude"] {
+  display: none;
+}
+
+/* ── MAP ── */
+.map-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+#map {
+  height: 360px;
+  width: 100%;
+}
+
+.map-hint {
+  position: absolute;
+  bottom: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 500;
+  background: rgba(6,11,16,0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 7px 16px;
+  font-size: 12px; color: var(--muted);
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.map-hint::before {
+  content: '📍'; font-size: 13px;
+}
+
+/* coords display */
+.coords-display {
+  display: flex; gap: 12px; margin-top: 12px;
+}
+
+.coord-box {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+}
+
+.coord-box .coord-label {
+  color: var(--muted); font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.coord-box .coord-val {
+  color: var(--g); font-weight: 600; font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── SUBMIT ── */
+.submit-section {
+  padding: 28px 36px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 16px;
+  flex-wrap: wrap;
+}
+
+.submit-note {
+  font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.submit-note::before { content:'🔒'; font-size:13px; }
+
+.submit-btn {
+  padding: 14px 40px;
+  background: linear-gradient(135deg, var(--g), #00bcd4);
+  color: var(--dark);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700; font-size: 14px;
+  letter-spacing: 0.5px;
+  border: none; border-radius: 50px;
+  cursor: pointer;
+  transition: .3s;
+  box-shadow: 0 6px 24px rgba(0,230,118,.3);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0,230,118,.5);
+}
+
+/* ── LEAFLET OVERRIDES ── */
+.leaflet-control-geocoder {
+  background: rgba(12,21,32,0.95) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
+}
+
+.leaflet-control-geocoder-form input {
+  background: transparent !important;
+  color: var(--text) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.leaflet-control-geocoder-alternatives {
+  background: rgba(12,21,32,0.98) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.leaflet-control-geocoder-alternatives li a {
+  color: var(--text) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 13px !important;
+}
+
+.leaflet-control-geocoder-alternatives li:hover {
+  background: rgba(0,230,118,0.08) !important;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  header { padding: 0 20px; }
+  .page { padding: 32px 16px 60px; }
+  .form-section { padding: 24px 20px; }
+  .submit-section { padding: 20px; }
+  .field-grid { grid-template-columns: 1fr; }
+  .field-grid .full { grid-column: 1; }
+  #map { height: 280px; }
+  .coords-display { flex-direction: column; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- HEADER -->
+<header>
+  <a href="/" class="logo">
+    <div class="logo-ball">⚽</div>
+    TURF MATCH
+  </a>
+  <a href="{% url 'home' %}" class="back-link">← Back to Turfs</a>
+</header>
+
+<!-- PAGE -->
+<div class="page">
+
+  <div class="page-title">
+    <div class="eyebrow">Turf Owner</div>
+
+            <h2>
+        {% if edit %}
+        Edit Turf
+        {% else %}
+        Create Turf
+        {% endif %}
+        </h2>
+    
+    <p>Fill in the details below and pin your location on the map.</p>
+  </div>
+
+  <div class="form-card">
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- BASIC INFO -->
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon">🏟️</div>
+          <div>
+            <h2>Basic Information</h2>
+            <p>Name, location and pricing details</p>
+          </div>
+        </div>
+
+        <div class="field-grid">
+
+          <div class="field full">
+            <label>Turf Name & Game</label>
+            {{ form.name }}
+          </div>
+
+          <div class="field full">
+            <label>Location / Address</label>
+            {{ form.location }}
+          </div>
+
+          <div class="field">
+            <label>Price per Hour (₹)</label>
+            {{ form.price_per_hour }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- IMAGE -->
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon">🖼️</div>
+          <div>
+            <h2>Turf Image</h2>
+            <p>Upload a clear photo of your ground</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="file-wrapper">
+            <label class="file-label" for="{{ form.image.id_for_label }}">
+              <div class="file-icon">📸</div>
+              <span>
+                Click to upload image
+                <small>JPG, PNG or WEBP · Max 5 MB</small>
+              </span>
+            </label>
+            {{ form.image }}
+          </div>
+        </div>
+      </div>
+
+      <!-- MAP -->
+      <div class="form-section">
+        <div class="section-head">
+          <div class="section-icon">📍</div>
+          <div>
+            <h2>Pin Your Location</h2>
+            <p>Search or click on the map to set exact coordinates</p>
+          </div>
+        </div>
+
+        <div class="map-wrapper">
+          <div id="map"></div>
+          <div class="map-hint">Click anywhere on the map to drop a pin</div>
+        </div>
+
+        <div class="coords-display">
+          <div class="coord-box">
+            <div class="coord-label">Latitude</div>
+            <div class="coord-val" id="lat-display">—</div>
+          </div>
+          <div class="coord-box">
+            <div class="coord-label">Longitude</div>
+            <div class="coord-val" id="lng-display">—</div>
+          </div>
+        </div>
+
+        <!-- hidden fields -->
+        {{ form.latitude }}
+        {{ form.longitude }}
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="submit-section">
+        <div class="submit-note">Your data is stored securely</div>
+
+        {% if edit %}
+
+        <button type="submit" class="submit-btn">
+          🏟️ &nbsp; Edit Turf
+        </button>
+        {% else %}
+
+        <button type="submit" class="submit-btn">
+          🏟️ &nbsp;Create Turf
+        </button>
+
+        {% endif %}
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+
+// ── MAP INIT ──
+var map = L.map('map').setView([11.2588, 75.7804], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+var marker;
+
+// custom green marker
+var greenIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    width:32px; height:32px;
+    background: #00e676;
+    border: 3px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 4px 16px rgba(0,230,118,.6);
+  "></div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
+function setPin(latlng) {
+  if (marker) map.removeLayer(marker);
+  marker = L.marker(latlng, { icon: greenIcon }).addTo(map);
+  document.getElementById("id_latitude").value  = latlng.lat.toFixed(6);
+  document.getElementById("id_longitude").value = latlng.lng.toFixed(6);
+  document.getElementById("lat-display").textContent = latlng.lat.toFixed(6);
+  document.getElementById("lng-display").textContent = latlng.lng.toFixed(6);
+}
+
+// geocoder search
+L.Control.geocoder({ defaultMarkGeocode: false })
+  .on('markgeocode', function(e) {
+    var c = e.geocode.center;
+    map.setView(c, 16);
+    setPin(c);
+  })
+  .addTo(map);
+
+// click to place
+map.on('click', function(e) {
+  setPin(e.latlng);
+});
+
+// file input label update
+var fileInput = document.querySelector('input[type="file"]');
+if (fileInput) {
+  fileInput.addEventListener('change', function() {
+    var label = this.previousElementSibling;
+    if (this.files && this.files[0]) {
+      var span = label.querySelector('span');
+      span.innerHTML = this.files[0].name + '<small>' + (this.files[0].size / 1024).toFixed(0) + ' KB</small>';
+    }
+  });
+}
+
+</script>
+</body>
+</html>
